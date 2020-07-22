@@ -14,18 +14,26 @@ namespace Funda_assignment_Silvestrova
     {
         static string defaultCity = "amsterdam";
         static string defaultParameter = "tuin";
-
+        static ServiceProvider serviceProvider;
         static void Main(string[] args)
         {
             //setup our DI
-            var serviceProvider = ConfigureServices();
+            serviceProvider = ConfigureServices();
 
             var logger = serviceProvider.GetService<ILogger<Program>>();
 
             var agentsRepository = serviceProvider.GetService<IAgentRepository>();
+            CalculateTable(new string[] { defaultCity });
+            CalculateTable(new string[] { defaultCity, defaultParameter });
+
+            logger.LogDebug("All done!");
+        }
+        static void CalculateTable(string [] parameters)
+        {
             Stopwatch stopwatch = new Stopwatch();
+            var agentsRepository = serviceProvider.GetService<IAgentRepository>();
             stopwatch.Start();
-            var agents = agentsRepository.GetOrderedAgents(new string[]{defaultCity}).Take(10);
+            var agents = agentsRepository.GetOrderedAgents(parameters).Take(10);
             Console.Clear();
             Console.WriteLine("agents table for Amsterdam");
             ConsoleDisplay.PrintLine();
@@ -35,30 +43,9 @@ namespace Funda_assignment_Silvestrova
                 ConsoleDisplay.PrintRow(agent.ListingsAmount.ToString(), agent.GetAgentDescription());
             ConsoleDisplay.PrintLine();
             stopwatch.Stop();
-            Console.WriteLine($"took {stopwatch.ElapsedMilliseconds} ms");
-          
+            Console.WriteLine($"took {stopwatch.ElapsedMilliseconds} ms to execute");
+
             Console.ReadLine();
-            
-            stopwatch.Restart();
-            agents = agentsRepository.GetOrderedAgents(new string[] { defaultCity, defaultParameter }).Take(10);
-            Console.Clear();
-            Console.WriteLine("agents table for Amsterdam/Tuin");
-            ConsoleDisplay.PrintLine();
-            ConsoleDisplay.PrintRow("Agent Listings Amount", "Agent Id:Name");
-            ConsoleDisplay.PrintLine();
-            foreach (var agent in agents)
-                ConsoleDisplay.PrintRow(agent.ListingsAmount.ToString(), agent.GetAgentDescription());
-            ConsoleDisplay.PrintLine();
-            stopwatch.Stop();
-            Console.WriteLine($"took {stopwatch.ElapsedMilliseconds} ms");
-            Console.ReadLine();
-           
-            //do the actual work here
-
-
-            logger.LogDebug("All done!");
-
-
         }
         static ServiceProvider ConfigureServices()
         {
