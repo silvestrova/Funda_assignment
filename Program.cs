@@ -2,10 +2,12 @@
 using Funda_assignment_Silvestrova.Presentation;
 using Funda_assignment_Silvestrova.Repositories;
 using Funda_assignment_Silvestrova.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace Funda_assignment_Silvestrova
@@ -23,17 +25,17 @@ namespace Funda_assignment_Silvestrova
             var logger = serviceProvider.GetService<ILogger<Program>>();
 
             var agentsRepository = serviceProvider.GetService<IAgentRepository>();
-            CalculateTable(new string[] { defaultCity });
-            CalculateTable(new string[] { defaultCity, defaultParameter });
+            CalculateTable(agentsRepository, 
+                new string[] { defaultCity });
+            CalculateTable(agentsRepository, new string[] { defaultCity, defaultParameter });
 
             logger.LogDebug("All done!");
         }
-        static void CalculateTable(string [] parameters)
+        static void CalculateTable(IAgentRepository agentRepository,string [] parameters)
         {
             Stopwatch stopwatch = new Stopwatch();
-            var agentsRepository = serviceProvider.GetService<IAgentRepository>();
             stopwatch.Start();
-            var agents = agentsRepository.GetOrderedAgents(parameters).Take(10);
+            var agents = agentRepository.GetOrderedAgents(parameters).Take(10);
             Console.Clear();
             Console.WriteLine("agents table for Amsterdam");
             ConsoleDisplay.PrintLine();
@@ -49,19 +51,24 @@ namespace Funda_assignment_Silvestrova
         }
         static ServiceProvider ConfigureServices()
         {
+          var configuration = new ConfigurationBuilder()
+         .SetBasePath(Directory.GetParent(AppContext.BaseDirectory).FullName)
+         .AddJsonFile("appsettings.json", false)
+         .Build();
+
             var services = new ServiceCollection();
             services.AddLogging(builder =>
             {
                 builder.AddConsole(options => options.IncludeScopes = true);
             });
+            services.AddSingleton<IConfiguration>(configuration);
             services.AddHttpClient<IListingService, ListingService>(client =>
             {
-                client.BaseAddress = new Uri("http://partnerapi.funda.nl/");
+                client.BaseAddress = new Uri(configuration.GetValue<string>("RequestData:baseUrl"));
             });
             services.AddScoped<IAgentRepository, AgentRepository>();
-            services.AddScoped<IListingRepository, ListingRepository>
-                (x=>new ListingRepository(x.GetRequiredService<IListingService>(), x.GetRequiredService<ILogger<ListingRepository>>(), 100));
-            services.AddSingleton<IConfigurationHelper, ConfigurationHelper>(x => new ConfigurationHelper("ac1b0b1572524640a0ecc54de453ea9f"));
+            services.AddScoped<IListingRepository, ListingRepository>();
+            services.AddSingleton<IConfigurationHelper, ConfigurationHelper>();
 
             return services.BuildServiceProvider();
         }

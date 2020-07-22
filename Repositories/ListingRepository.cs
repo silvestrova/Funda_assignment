@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Funda_assignment_Silvestrova.Models;
 using Funda_assignment_Silvestrova.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Funda_assignment_Silvestrova.Repositories
@@ -13,11 +14,11 @@ namespace Funda_assignment_Silvestrova.Repositories
         private IListingService listingService;
         private ILogger<ListingRepository> logger;
         private int pageSize;
-        public ListingRepository(IListingService listingService, ILogger<ListingRepository> logger, int pageSize)
+        public ListingRepository(IListingService listingService, ILogger<ListingRepository> logger, IConfiguration configuration)
         {
             this.listingService = listingService;
             this.logger = logger;
-            this.pageSize = pageSize;
+            this.pageSize = configuration.GetValue<int>("RequestData:pageSize");
         }
 
         public IEnumerable<Listing> GetListings(string[] sortParams)

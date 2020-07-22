@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +9,9 @@ namespace Funda_assignment_Silvestrova.Configuration
     public class ConfigurationHelper : IConfigurationHelper
     {
         private string securityKey;
-        public ConfigurationHelper(string securityKey)
+        public ConfigurationHelper(IConfiguration configuration)
         {
-            this.securityKey = securityKey;
+            this.securityKey = configuration.GetValue<string>("RequestData:key");
         }
         public string CombineListingsRequestUrl(string [] sortParams, int pageNumber, int pageSize)
         {
